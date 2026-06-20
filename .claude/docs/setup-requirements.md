@@ -52,6 +52,11 @@ sudo pacman -S jq       # Arch
 ### macOS / Linux
 - Bash is available natively
 - Install `jq` via your package manager for full hook support
+- **Desktop notifications** (`notify.sh`) work out of the box: macOS uses the
+  built-in `osascript` (or `terminal-notifier` if installed); Linux uses
+  `notify-send` (install `libnotify-bin` on Debian/Ubuntu, `libnotify` on
+  Fedora/Arch). If no notifier is present, the hook still prints the
+  notification to stdout and never blocks the session.
 
 ## Verifying Your Setup
 
