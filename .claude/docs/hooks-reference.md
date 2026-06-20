@@ -19,3 +19,17 @@ Hooks are configured in `.claude/settings.json` and fire automatically:
 
 Hook reference documentation: `.claude/docs/hooks-reference/`
 Hook input schema documentation: `.claude/docs/hooks-reference/hook-input-schemas.md`
+
+## Missing-Hook Resilience
+
+Each hook command in `.claude/settings.json` is guarded so a missing script
+never crashes the session:
+
+```
+[ ! -f .claude/hooks/<name>.sh ] || bash .claude/hooks/<name>.sh
+```
+
+If the script is absent the command is a silent no-op (exit 0) instead of the
+hard `bash: .claude/hooks/<name>.sh: No such file or directory` error. When the
+script is present its real exit code is preserved, so blocking validators (for
+example `validate-commit.sh`, which can `exit 2`) still block as intended.
