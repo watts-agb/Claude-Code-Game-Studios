@@ -19,3 +19,26 @@ Hooks are configured in `.claude/settings.json` and fire automatically:
 
 Hook reference documentation: `.claude/docs/hooks-reference/`
 Hook input schema documentation: `.claude/docs/hooks-reference/hook-input-schemas.md`
+
+## Hook Path Resilience
+
+Each hook command in `.claude/settings.json` is anchored to the project root and
+guarded so it works no matter the current directory and never crashes the
+session when a script is absent:
+
+```
+cd "${CLAUDE_PROJECT_DIR:-.}" && { [ ! -f .claude/hooks/<name>.sh ] || bash .claude/hooks/<name>.sh; }
+```
+
+- **Project root, not the current directory.** Claude Code may invoke a hook
+  while working in a sub-directory. `cd "${CLAUDE_PROJECT_DIR:-.}"` first moves
+  to the project root (`$CLAUDE_PROJECT_DIR` is set by Claude Code), so the hook
+  is found and its own relative paths (`git`, `production/...`) resolve. This
+  avoids the `bash: .claude/hooks/<name>.sh: No such file or directory` error
+  that occurs when a hook is launched from a sub-directory. If the variable is
+  unset, it falls back to the current directory.
+- **Missing script is a no-op.** If the script is absent the command exits 0
+  silently instead of erroring.
+- **Exit codes preserved.** When the script is present its real exit code is
+  returned, so blocking validators (for example `validate-commit.sh`, which can
+  `exit 2`) still block as intended. stdin is still passed through to the hook.
